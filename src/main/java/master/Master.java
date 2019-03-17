@@ -16,6 +16,12 @@ public class Master {
     private List<String> workers;
 
     private ZooKeeper zooKeeper;
+    private Watcher workersChangedWatcher = event -> {
+        if (event.getType() == Event.EventType.NodeChildrenChanged) {
+            assert "/workers".equals(event.getPath());
+            getWorkers();
+        }
+    };
     private AsyncCallback.Children2Callback workersGetChildrenCallBack = (rc, path, ctx, children, stat) -> {
         children.forEach(child -> log.info("child:{}", child));
         workers = children;
@@ -28,12 +34,6 @@ public class Master {
                 break;
             default:
                 log.error("getChildren failed", KeeperException.create(Code.get(rc), path));
-        }
-    };
-    private Watcher workersChangedWatcher = event -> {
-        if (event.getType() == Event.EventType.NodeChildrenChanged) {
-            assert "/workers".equals(event.getPath());
-            getWorkers();
         }
     };
     private AsyncCallback.StringCallback assignTaskCallBack = (rc, path, ctx, name) -> {
@@ -53,7 +53,7 @@ public class Master {
                 log.error("Error when trying to assign task", KeeperException.create(Code.get(rc), path));
         }
     };
-    private AsyncCallback.DataCallback taskDateCallBack = (rc, path, ctx, data, stat) -> {
+    private AsyncCallback.DataCallback taskDataCallBack = (rc, path, ctx, data, stat) -> {
         log.info("rc:{}", rc);
         switch (Code.get(rc)) {
             case CONNECTIONLOSS:
@@ -61,14 +61,24 @@ public class Master {
                 break;
             case OK:
                 if (workers != null && !workers.isEmpty()) {
+                    log.info("workers size:{}", workers.size());
                     int worker = new Random().nextInt(workers.size());
+                    System.out.println("worker index is " + worker);
                     String designateWorker = workers.get(worker);
                     String assignmentPath = "/assign/" + designateWorker + "/" + ctx;
                     createAssignment(assignmentPath, data);
                 }
                 break;
+            case NODEEXISTS:
+                log.warn("No Node for {}", path);
             default:
                 log.error("Error when trying to get task data", KeeperException.create(Code.get(rc), path));
+        }
+    };
+    private Watcher tasksChangedWatcher = event -> {
+        if (event.getType() == Event.EventType.NodeChildrenChanged) {
+            assert "/tasks".equals(event.getPath());
+            getTasks();
         }
     };
     private AsyncCallback.Children2Callback taskGetChildrenCallBack = (rc, path, ctx, children, stat) -> {
@@ -85,10 +95,11 @@ public class Master {
                 log.error("getChildren failed.", KeeperException.create(Code.get(rc), path));
         }
     };
-    private Watcher tasksChangedWatcher = event -> {
-        if (event.getType() == Event.EventType.NodeChildrenChanged) {
-            assert "/tasks".equals(event.getPath());
-            getTasks();
+    private Watcher masterExistsWatcher = event -> {
+        log.info("event:{}", event);
+        if (event.getType() == Event.EventType.NodeDeleted) {
+            assert "/master".equals(event.getPath());
+            runForMaster();
         }
     };
     private AsyncCallback.StatCallback masterExistsCallBack = (rc, path, ctx, stat) -> {
@@ -104,13 +115,6 @@ public class Master {
                 break;
             default:
                 checkMaster();
-        }
-    };
-    private Watcher masterExistsWatcher = event -> {
-        log.info("event:{}", event);
-        if (event.getType() == Event.EventType.NodeDeleted) {
-            assert "/master".equals(event.getPath());
-            runForMaster();
         }
     };
 
@@ -200,7 +204,7 @@ public class Master {
 
     private void getTaskData(String task) {
         zooKeeper.getData("/tasks/" + task,
-                false, taskDateCallBack, task);
+                false, taskDataCallBack, task);
     }
 
     private static class MasterEventWatcher implements Watcher {

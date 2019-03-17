@@ -1,3 +1,4 @@
+import client.Client;
 import master.Master;
 import org.apache.zookeeper.ZooKeeper;
 import worker.Worker;
@@ -16,10 +17,13 @@ public class Main {
         worker.register();
 
         Worker two = new Worker("MyWorkTwo", zooKeeper);
-        worker.register();
+        two.register();
 
         Client client = new Client(zooKeeper);
         client.queueCommand("hello world");
+        client.queueCommand("mvn clean");
+        client.queueCommand("Hi");
+        client.queueCommand("mvn spring-boot:run");
 
         Master anotherMaster = new Master(zooKeeper);
         anotherMaster.runForMaster();

@@ -31,6 +31,7 @@ public class Worker {
                 break;
             case OK:
                 log.info("task finished");
+                receiveTask(data);
                 break;
             default:
                 log.error("task received failure", KeeperException.create(KeeperException.Code.get(rc), path));
@@ -120,6 +121,11 @@ public class Worker {
         if (status == this.status) {
             zooKeeper.setData("/workers/" + name, status.getBytes(), -1, statusUpdateCallBack(), status);
         }
+    }
+
+    private void receiveTask(byte[] data) {
+        String task = new String(data);
+        log.info("Worker {} finished task {}", serverId, task);
     }
 
     public void setStatus(String status) {

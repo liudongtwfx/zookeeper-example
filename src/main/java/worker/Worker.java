@@ -104,7 +104,7 @@ public class Worker {
                     log.warn("Already registered:{}", serverId);
                     break;
                 default:
-                    log.error("Something went wrong:{}", KeeperException.create(KeeperException.Code.get(rc), path));
+                    log.error("Something went wrong", KeeperException.create(KeeperException.Code.get(rc), path));
             }
         };
     }

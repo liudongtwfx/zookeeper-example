@@ -1,11 +1,13 @@
 import client.Client;
 import master.Master;
 import org.apache.zookeeper.ZooKeeper;
+import org.apache.zookeeper.server.auth.DigestAuthenticationProvider;
 import worker.Worker;
 
 public class Main {
     public static void main(String[] args) throws Exception {
-        ZooKeeper zooKeeper = new ZooKeeper("localhost", 15000, new ZookeeperWatcher());
+        ZooKeeper zooKeeper = new ZooKeeper("127.0.0.1:2181,127.0.0.1:2182,127.0.0.1:2183/", 15000, new ZookeeperWatcher());
+        zooKeeper.addAuthInfo(new DigestAuthenticationProvider().getScheme(), "CREATE".getBytes());
         Master master = new Master(zooKeeper);
         master.runForMaster();
         System.out.println(master.getServerId());
@@ -28,7 +30,6 @@ public class Main {
         Master anotherMaster = new Master(zooKeeper);
         anotherMaster.runForMaster();
         System.out.println(anotherMaster.getServerId());
-
 
         AdminClient adminClient = new AdminClient(zooKeeper);
         adminClient.listState();

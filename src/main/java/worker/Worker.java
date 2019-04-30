@@ -46,9 +46,11 @@ public class Worker {
                 break;
             case OK:
                 if (children != null) {
-                    executor.execute(new TaskRunner().init(children, taskDataCallBack));
+                    executor.execute(new TaskRunner(children, taskDataCallBack));
                 }
                 break;
+            default:
+                //doNothing
         }
     };
     private AsyncCallback.StringCallback assignNodeCreateCallback = (rc, path, ctx, name) -> {
@@ -140,10 +142,9 @@ public class Worker {
         List<String> children;
         AsyncCallback.DataCallback cb;
 
-        Runnable init(List<String> children, AsyncCallback.DataCallback cb) {
+        TaskRunner(List<String> children, AsyncCallback.DataCallback cb) {
             this.children = children;
             this.cb = cb;
-            return this;
         }
 
         @Override

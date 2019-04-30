@@ -53,23 +53,24 @@ public class QuorumPeerMainTest extends QuorumPeerMain implements Runnable {
         log.info("Exiting normally");
     }
 
-    private void printServerState() {
-        switch (quorumPeer.getServerState()) {
-            case QuorumStats.Provider.LEADING_STATE:
-                out.println(quorumPeer.getMyid() + ": is leader");
-                break;
-            case QuorumStats.Provider.FOLLOWING_STATE:
-                out.println(quorumPeer.getMyid() + ":" + quorumPeer.follower);
-                break;
-            default:
-                out.println(quorumPeer.getServerState());
-        }
-    }
 
     class ReportRunner implements Runnable {
         @Override
         public void run() {
             printServerState();
+        }
+
+        private void printServerState() {
+            switch (quorumPeer.getServerState()) {
+                case QuorumStats.Provider.LEADING_STATE:
+                    out.println(quorumPeer.getMyid() + ": is leader");
+                    break;
+                case QuorumStats.Provider.FOLLOWING_STATE:
+                    out.println(quorumPeer.getMyid() + ":" + quorumPeer.follower);
+                    break;
+                default:
+                    out.println(quorumPeer.getServerState());
+            }
         }
     }
 }

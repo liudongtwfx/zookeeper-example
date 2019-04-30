@@ -1,21 +1,23 @@
 package worker;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 import org.apache.zookeeper.*;
 import org.apache.zookeeper.Watcher.Event;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @Slf4j
 public class Worker {
     private static final List<String> onGoingTasks = new ArrayList<>();
     private String serverId = Integer.toHexString(new Random().nextInt());
     private String status;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    private Executor executor = new ScheduledThreadPoolExecutor(1, new BasicThreadFactory.Builder().namingPattern("task%s").build());
     private ZooKeeper zooKeeper;
     private String name;
     private Watcher newTaskWatcher = event -> {
@@ -46,6 +48,7 @@ public class Worker {
                 if (children != null) {
                     executor.execute(new TaskRunner().init(children, taskDataCallBack));
                 }
+                break;
         }
     };
     private AsyncCallback.StringCallback assignNodeCreateCallback = (rc, path, ctx, name) -> {
@@ -117,8 +120,8 @@ public class Worker {
         };
     }
 
-    synchronized private void updateStatus(String status) {
-        if (status == this.status) {
+    private synchronized void updateStatus(String status) {
+        if (Objects.equals(status, this.status)) {
             zooKeeper.setData("/workers/" + name, status.getBytes(), -1, statusUpdateCallBack(), status);
         }
     }

@@ -21,7 +21,7 @@ public class QuorumPeerMainTest extends QuorumPeerMain implements Runnable {
     }
 
     public static void main(String[] args) {
-        throw new RuntimeException("Please config server properties");
+        throw new IllegalStateException("Please config server properties");
     }
 
     @Override

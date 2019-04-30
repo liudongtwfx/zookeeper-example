@@ -9,14 +9,20 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.System.err;
+import static java.lang.System.out;
+
+/**
+ * @author liudong
+ */
 @Slf4j
 public class QuorumPeerMainTest extends QuorumPeerMain implements Runnable {
     private static final ScheduledExecutorService executorService = new ScheduledThreadPoolExecutor(1);
 
-    private static final String USAGE = "Usage: QuorumPeerMain configfile";
+    private static final String USAGE = "Usage: QuorumPeerMain config file";
     private String[] args;
 
-    public QuorumPeerMainTest(String[] args) {
+    QuorumPeerMainTest(String[] args) {
         this.args = args;
     }
 
@@ -36,27 +42,27 @@ public class QuorumPeerMainTest extends QuorumPeerMain implements Runnable {
         } catch (IllegalArgumentException e) {
             log.error("Invalid arguments, exiting abnormally", e);
             log.info(USAGE);
-            System.err.println(USAGE);
+            err.println(USAGE);
             System.exit(2);
         } catch (QuorumPeerConfig.ConfigException e) {
             log.error("Invalid config, exiting abnormally", e);
-            System.err.println("Invalid config, exiting abnormally");
+            err.println("Invalid config, exiting abnormally");
         } catch (Exception e) {
             log.error("Unexpected exception, exiting abnormally", e);
         }
         log.info("Exiting normally");
     }
 
-    public void printServerState() {
+    private void printServerState() {
         switch (quorumPeer.getServerState()) {
             case QuorumStats.Provider.LEADING_STATE:
-                System.out.println(quorumPeer.getMyid() + ": is leader");
+                out.println(quorumPeer.getMyid() + ": is leader");
                 break;
             case QuorumStats.Provider.FOLLOWING_STATE:
-                System.out.println(quorumPeer.getMyid() + ":" + quorumPeer.follower);
+                out.println(quorumPeer.getMyid() + ":" + quorumPeer.follower);
                 break;
             default:
-                System.out.println(quorumPeer.getServerState());
+                out.println(quorumPeer.getServerState());
         }
     }
 
